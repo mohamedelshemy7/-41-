@@ -1,0 +1,16 @@
+{
+    "name": "المنقذ الذكي",
+    "short_name": "المنقذ",
+    "description": "أرسل رسالة طوارئ بسرعة عبر واتساب/SMS وتتبّع الموقع كل 30 ثانية",
+    "lang": "ar",
+    "dir": "rtl",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#d93b3b",
+    "icons": [
+      { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+      { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    ]
+  }
+  
