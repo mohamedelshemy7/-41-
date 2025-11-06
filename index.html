@@ -1,335 +1,104 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>المنقذ الذكي — إرسال طوارئ</title>
-
-<!-- PWA manifest -->
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#d93b3b">
-
-<style>
-  :root{
-    --accent:#d93b3b;
-    --muted:#666;
-    --bg:#f7f7f8;
-    --card:#fff;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;font-family:"Tajawal",system-ui,sans-serif;direction:rtl;
-    background:linear-gradient(180deg,#f6fbff,#f7f7f8);color:#111;
-    display:flex;align-items:center;justify-content:center;padding:18px;
-  }
-  .wrap{width:100%;max-width:920px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  h1{margin:0;color:var(--accent);font-size:1.15rem}
-  small{color:var(--muted)}
-  .card{background:var(--card);border-radius:12px;padding:16px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 6px 20px rgba(18,38,63,0.04);margin-top:14px}
-  label{display:block;margin:8px 0 6px;font-weight:700}
-  input,textarea,select,button{font-size:1rem}
-  input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e6e9;background:#fff}
-  textarea{min-height:90px;resize:vertical}
-  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .btn{background:var(--accent);color:#fff;border:none;padding:10px 12px;border-radius:8px;cursor:pointer}
-  .btn.ghost{background:#fff;color:var(--accent);border:1px solid #f0dede}
-  .btn.warn{background:#ff9800}
-  .muted{color:var(--muted);font-size:0.9rem}
-  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:0.95rem}
-  th,td{padding:8px;border-bottom:1px solid #f4f4f4;text-align:right}
-  th{color:var(--accent);font-weight:800}
-  .status{display:inline-block;padding:6px 10px;border-radius:8px;background:#f6f6f6;color:#333;font-size:0.9rem}
-  @media(max-width:640px){.row{flex-direction:column}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚨 زر الطوارئ الذكي</title>
+  <style>
+    body {
+      font-family: "Tajawal", sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      margin: 0;
+    }
+    .container {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h1 {
+      color: #075e54;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #333;
+      font-size: 15px;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      outline: none;
+    }
+    input:focus, textarea:focus {
+      border-color: #25d366;
+    }
+    button {
+      background: #25d366;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #128c7e;
+    }
+    small {
+      color: gray;
+      display: block;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>🚨 المنقذ الذكي</h1>
-        <small>إرسال طوارئ سريع — واتساب / SMS — تثبيت كتطبيق</small>
-      </div>
-      <div class="muted">PWA • محلي • آمن</div>
-    </header>
-
-    <!-- تسجيل -->
-    <div id="auth" class="card">
-      <label>اسم المستخدم</label>
-      <input id="username" placeholder="اكتب اسمك هنا (مثلاً: علي)"/>
-      <label>كلمة المرور (محلي)</label>
-      <input id="password" type="password" placeholder="كلمة مرور تحفظ على جهازك فقط"/>
-      <div class="row" style="margin-top:10px">
-        <button id="register" class="btn">سجّل</button>
-        <button id="login" class="btn ghost">دخول</button>
-      </div>
-      <p class="muted" style="margin-top:10px">التسجيل محلي على جهازك فقط — بياناتك لا تُرسل إلى أي سيرفر.</p>
-    </div>
-
-    <!-- اللوحة الرئيسية -->
-    <div id="panel" class="card" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <strong id="who">مرحبًا</strong>
-          <div style="margin-top:6px"><span id="status" class="status">جاهز</span></div>
-        </div>
-        <div class="row">
-          <button id="logout" class="btn ghost">خروج</button>
-        </div>
-      </div>
-
-      <!-- رسالة الطوارئ -->
-      <div style="margin-top:12px">
-        <label>نص الرسالة (ستُضاف إليه إحداثيات عند الإرسال)</label>
-        <textarea id="emergencyText" placeholder="مثال: أنا محتاج مساعدة فورًا!"></textarea>
-        <div class="muted" style="margin-top:6px">سيتم إلحاق رابط الموقع في كل رسالة.</div>
-      </div>
-
-      <!-- إضافة الأرقام -->
-      <div style="margin-top:12px">
-        <label>أضف رقم جديد (بدون +) — مثال دولي: 201001234567</label>
-        <div class="row">
-          <input id="c_name" placeholder="الاسم (مثال: أمّي)"/>
-          <input id="c_phone" placeholder="الرقم بصيغة دولية بدون +"/>
-          <button id="addContact" class="btn">أضف</button>
-        </div>
-
-        <table id="contactsTable" aria-live="polite">
-          <thead><tr><th>اختيار</th><th>الاسم</th><th>الرقم</th><th>حذف</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <!-- أزرار الإرسال -->
-      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button id="btnSOS" class="btn">🆘 إرسال الآن — افتح واتساب</button>
-        <button id="btnCopy" class="btn ghost">نسخ الرسالة</button>
-        <button id="btnSMS" class="btn ghost">فتح SMS (نسخة)</button>
-
-        <!-- زر خاص بالإرسال المتسلسل للأرقام -->
-        <button id="btnSettings" class="btn ghost" title="إعدادات الإرسال">⚙️ إعدادات</button>
-        <div id="sendInfo" class="muted" style="margin-left:8px">Delay: <span id="delayMs">3000</span>ms</div>
-      </div>
-
-      <p class="muted" style="margin-top:10px">ملاحظة: المتصفح لا يرسل رسائل تلقائيًا — يتم فتح محادثات واتساب/SMS مسبقة النص لتضغط إرسال داخل التطبيق.</p>
-    </div>
+  <div class="container">
+    <h1>🚨 زر الطوارئ</h1>
+    <p>أدخل أرقام الأشخاص اللي عايز تبعتلهم رسالة طوارئ</p>
+    <input type="text" id="numbers" placeholder="أدخل الأرقام مفصولة بفاصلة (مثال: 201001234567,201002345678)" />
+    <textarea id="message" rows="4" placeholder="اكتب رسالة الطوارئ هنا"></textarea>
+    <button onclick="sendMessage()">إرسال الرسالة</button>
+    <small>⚠️ سيتم فتح واتساب لكل رقم تلقائيًا بالتتابع</small>
   </div>
 
-<script>
-/* ====== PWA registration (optional) ====== */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(()=>{console.warn('SW reg failed')});
-  });
-}
+  <script>
+    function sendMessage() {
+      const numbersInput = document.getElementById("numbers").value;
+      const message = document.getElementById("message").value.trim();
 
-/* ====== Helpers & storage ====== */
-const qs = id => document.getElementById(id);
-const norm = s => s ? s.replace(/\D/g,'') : '';
-const USER_SESSION_KEY = 'rescuer_current_v1';
-let sendDelay = 3000; // الافتراضي: 3 ثواني بين فتح كل محادثة
+      if (numbersInput.trim() === "" || message === "") {
+        alert("من فضلك أدخل الأرقام والرسالة أولاً.");
+        return;
+      }
 
-/* ====== Auth (local) ====== */
-qs('register').onclick = () => {
-  const u = qs('username').value.trim(), p = qs('password').value;
-  if(!u || !p) return alert('اكتب اسم المستخدم وكلمة المرور');
-  if(localStorage.getItem('rescuer_'+u)) return alert('الاسم مستخدم بالفعل');
-  localStorage.setItem('rescuer_'+u, JSON.stringify({password:p, contacts:[], emergencyText:''}));
-  localStorage.setItem(USER_SESSION_KEY, u);
-  startSession(u);
-};
-qs('login').onclick = () => {
-  const u = qs('username').value.trim(), p = qs('password').value;
-  const raw = localStorage.getItem('rescuer_'+u); if(!raw) return alert('المستخدم غير موجود');
-  const data = JSON.parse(raw); if(data.password !== p) return alert('كلمة المرور خاطئة');
-  localStorage.setItem(USER_SESSION_KEY, u);
-  startSession(u);
-};
-qs('logout').onclick = () => {
-  if(confirm('هل تريد تسجيل الخروج؟')) {
-    localStorage.removeItem(USER_SESSION_KEY);
-    endSession();
-  }
-};
+      const numbers = numbersInput.split(",").map(num => num.trim()).filter(num => num !== "");
+      let index = 0;
 
-function startSession(u){
-  const raw = localStorage.getItem('rescuer_'+u);
-  const data = raw ? JSON.parse(raw) : {password:'', contacts:[], emergencyText:''};
-  qs('auth').style.display = 'none'; qs('panel').style.display = 'block';
-  qs('who').innerText = `مرحبًا ${u}`;
-  qs('emergencyText').value = data.emergencyText || '';
-  renderContacts(data.contacts || []);
-  updateStatus('جاهز');
-}
-function endSession(){
-  qs('auth').style.display = 'block'; qs('panel').style.display = 'none';
-  qs('username').value=''; qs('password').value=''; qs('emergencyText').value='';
-  updateStatus('غير مسجل');
-}
+      const openNext = () => {
+        if (index < numbers.length) {
+          const number = numbers[index];
+          alert(`📨 جاري إرسال للرقم ${index + 1} من ${numbers.length}`);
+          const url = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+          window.location.href = url; // يفتح في نفس الصفحة
+          index++;
+          setTimeout(openNext, 2000); // كل 2 ثانية رقم جديد
+        } else {
+          alert("✅ تم إرسال الرسائل لكل الأرقام!");
+        }
+      };
 
-/* load session */
-window.addEventListener('load', ()=> {
-  const cur = localStorage.getItem(USER_SESSION_KEY);
-  if(cur) startSession(cur);
-});
-
-/* ====== Contacts CRUD ====== */
-function getCurrentUserData(){ const u = localStorage.getItem(USER_SESSION_KEY); if(!u) return null; const raw = localStorage.getItem('rescuer_'+u); return raw?JSON.parse(raw):null; }
-function saveCurrentUserData(data){ const u = localStorage.getItem(USER_SESSION_KEY); if(!u) return; localStorage.setItem('rescuer_'+u, JSON.stringify(data)); }
-
-function addRow(contact){
-  const tbody = qs('contactsTable').querySelector('tbody');
-  const tr = document.createElement('tr');
-  tr.innerHTML = `<td style="width:70px"><input type="checkbox" data-id="${contact.id}"></td>
-                  <td>${escapeHtml(contact.name)}</td><td>${escapeHtml(contact.phone)}</td>
-                  <td><button class="btn ghost" data-del="${contact.id}">حذف</button></td>`;
-  tbody.appendChild(tr);
-  tr.querySelector('button[data-del]').onclick = () => {
-    if(!confirm('حذف هذا الرقم؟')) return;
-    tr.remove();
-    const d = getCurrentUserData(); if(!d) return;
-    d.contacts = (d.contacts||[]).filter(x => x.id !== contact.id);
-    saveCurrentUserData(d);
-  };
-}
-
-function renderContacts(list){
-  const tbody = qs('contactsTable').querySelector('tbody'); tbody.innerHTML = '';
-  (list||[]).forEach(c => addRow(c));
-}
-
-/* escape to avoid injection when inserting text nodes */
-function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
-
-qs('addContact').onclick = () => {
-  const name = qs('c_name').value.trim();
-  const phoneRaw = qs('c_phone').value.trim();
-  const phone = norm(phoneRaw);
-  if(!name || !phone) return alert('اكتب اسم ورقم صحيح');
-  const id = Date.now().toString();
-  const contact = { id, name, phone };
-  const d = getCurrentUserData() || {password:'', contacts:[], emergencyText:''};
-  d.contacts = d.contacts || []; d.contacts.push(contact);
-  saveCurrentUserData(d);
-  addRow(contact);
-  qs('c_name').value=''; qs('c_phone').value='';
-};
-
-/* save emergency text */
-qs('emergencyText').addEventListener('change', ()=> {
-  const d = getCurrentUserData(); if(!d) return;
-  d.emergencyText = qs('emergencyText').value; saveCurrentUserData(d);
-});
-
-/* ====== Status UI ====== */
-function updateStatus(txt){ qs('status').innerText = txt; }
-
-/* ====== Messaging utils ====== */
-function getSelectedPhones(){
-  const tbody = qs('contactsTable').querySelector('tbody');
-  const checks = Array.from(tbody.querySelectorAll('input[type=checkbox]:checked'));
-  const phones = checks.map(ch => ch.closest('tr').cells[2].innerText.trim()).filter(Boolean);
-  if(phones.length === 0){
-    const d = getCurrentUserData();
-    if(d && d.contacts) return d.contacts.map(c => c.phone);
-    return [];
-  }
-  return phones;
-}
-
-/* try to get geolocation once */
-function getLocationOnce(timeout=8000){
-  return new Promise((resolve,reject)=>{
-    if(!navigator.geolocation) return reject(new Error('المتصفح لا يدعم الموقع'));
-    navigator.geolocation.getCurrentPosition(pos => resolve({lat:pos.coords.latitude, lon:pos.coords.longitude}),
-      err => reject(err), {enableHighAccuracy:true, timeout});
-  });
-}
-
-/* build message with link */
-function buildMessage(baseMsg, lat, lon){
-  if(lat != null && lon != null) {
-    return `${baseMsg} موقعي: https://www.google.com/maps?q=${lat.toFixed(6)},${lon.toFixed(6)}`;
-  }
-  return baseMsg + ' (الموقع غير متاح)';
-}
-
-/* open wa.me for many phones sequentially with delay and small status alerts */
-function openWhatsAppsFor(phones, message, delayMs=3000){
-  if(!phones || phones.length === 0) return;
-  updateStatus(`فتح محادثات واتساب (${phones.length})...`);
-  phones.forEach((phone, idx) => {
-    setTimeout(() => {
-      updateStatus(`فتح رقم ${idx+1} من ${phones.length}...`);
-      window.open(`https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(message)}`, '_blank');
-      // يمكن حذف التنبيه لو مش عايز alert popup
-      // alert(`تم فتح محادثة لرقم ${phone} (${idx+1}/${phones.length})`);
-    }, idx * delayMs);
-  });
-  // بعد انتهاء فتح جميع الشات، نجهز SMS كنسخة
-  setTimeout(()=> {
-    try { window.open(`sms:?&body=${encodeURIComponent(message)}`, '_blank'); } catch(e){ console.warn('فتح SMS فشل', e); }
-    updateStatus('تم التحضير — اضغط إرسال داخل التطبيقات');
-  }, phones.length * delayMs + 300);
-}
-
-/* ==== Buttons actions ==== */
-qs('btnSOS').onclick = async () => {
-  if(!localStorage.getItem(USER_SESSION_KEY)) return alert('سجّل دخول أولاً');
-  updateStatus('جلب الموقع...');
-  const base = qs('emergencyText').value.trim() || (getCurrentUserData() && getCurrentUserData().emergencyText) || 'أنا في خطر! أحتاج مساعدة!';
-  let lat=null, lon=null;
-  try { const p = await getLocationOnce(8000); lat=p.lat; lon=p.lon; } catch(e){ console.warn('no loc', e); }
-  const msg = buildMessage(base, lat, lon);
-  const phones = getSelectedPhones();
-  if(phones.length === 0) { alert('لا أرقام مسجلة'); updateStatus('جاهز'); return; }
-  openWhatsAppsFor(phones, msg, sendDelay);
-};
-
-qs('btnCopy').onclick = async () => {
-  const base = qs('emergencyText').value.trim() || (getCurrentUserData() && getCurrentUserData().emergencyText) || 'أنا في خطر!';
-  let lat=null; let lon=null;
-  try { const p = await getLocationOnce(5000); lat=p.lat; lon=p.lon; } catch(e){ console.warn('no loc', e); }
-  const msg = buildMessage(base, lat, lon);
-  try {
-    await navigator.clipboard.writeText(msg);
-    alert('تم نسخ الرسالة');
-  } catch(e) {
-    const ta = document.createElement('textarea'); ta.value = msg; document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); alert('تم النسخ (fallback)'); } catch(err){ alert('فشل النسخ'); }
-    ta.remove();
-  }
-};
-
-qs('btnSMS').onclick = async () => {
-  if(!localStorage.getItem(USER_SESSION_KEY)) return alert('سجّل دخول أولاً');
-  updateStatus('جلب الموقع...');
-  let lat=null, lon=null;
-  try { const p = await getLocationOnce(8000); lat=p.lat; lon=p.lon; } catch(e){ console.warn('no loc', e); }
-  const base = qs('emergencyText').value.trim() || (getCurrentUserData() && getCurrentUserData().emergencyText) || 'أنا في خطر!';
-  const msg = buildMessage(base, lat, lon);
-  try { window.open(`sms:?&body=${encodeURIComponent(msg)}`, '_blank'); } catch(e){ alert('تعذر فتح SMS'); }
-  updateStatus('جاهز');
-};
-
-/* settings زر: يفتح مربع صغير لتغيير التأخير بين كل فتح محادثة */
-qs('btnSettings').onclick = () => {
-  const val = prompt('حدد التأخير بين فتح كل محادثة بالمللي ثانية (مثال: 3000) :', String(sendDelay));
-  if(val === null) return;
-  const n = parseInt(val);
-  if(Number.isNaN(n) || n < 200) return alert('ادخل قيمة رقمية أكبر من 200 مللي ثانية');
-  sendDelay = n;
-  qs('delayMs').innerText = String(sendDelay);
-  updateStatus(`تم ضبط التأخير إلى ${sendDelay} مللي ثانية`);
-};
-
-/* helper: show a small confirmation when window/tab becomes visible (user returned) */
-document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible') {
-    // could restore status
-  }
-});
-</script>
+      openNext();
+    }
+  </script>
 </body>
 </html>
