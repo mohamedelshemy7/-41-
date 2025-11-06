@@ -1,104 +1,212 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🚨 زر الطوارئ الذكي</title>
-  <style>
-    body {
-      font-family: "Tajawal", sans-serif;
-      background: linear-gradient(135deg, #e0f7fa, #ffffff);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-      margin: 0;
-    }
-    .container {
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 20px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-    h1 {
-      color: #075e54;
-      margin-bottom: 10px;
-    }
-    p {
-      color: #333;
-      font-size: 15px;
-    }
-    input, textarea, button {
-      width: 100%;
-      margin: 10px 0;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-      outline: none;
-    }
-    input:focus, textarea:focus {
-      border-color: #25d366;
-    }
-    button {
-      background: #25d366;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #128c7e;
-    }
-    small {
-      color: gray;
-      display: block;
-      margin-top: 10px;
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>🚨 المنقذ الذكي — إرسال سريع (واتساب)</title>
+<style>
+  :root{--accent:#d93b3b;--muted:#666}
+  *{box-sizing:border-box}
+  body{font-family:"Tajawal",system-ui,sans-serif;direction:rtl;margin:0;background:#fff;padding:18px;color:#111;display:flex;justify-content:center}
+  .wrap{width:100%;max-width:840px}
+  header{display:flex;justify-content:space-between;align-items:center}
+  h1{color:var(--accent);margin:0;font-size:1.15rem}
+  small{color:var(--muted)}
+  .card{background:#fff;border:1px solid #f3eaea;padding:14px;border-radius:10px;margin-top:12px;box-shadow:0 4px 16px rgba(0,0,0,0.03)}
+  label{display:block;margin:8px 0 6px;font-weight:600}
+  input,textarea,select,button{font-size:1rem}
+  input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #e9e9e9}
+  textarea{min-height:70px;resize:vertical}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .btn{background:var(--accent);color:#fff;border:none;padding:10px 12px;border-radius:8px;cursor:pointer}
+  .btn.ghost{background:#f6f6f6;color:#222;border:1px solid #eee}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:0.95rem}
+  th,td{padding:8px;border-bottom:1px solid #f4f4f4;text-align:right}
+  th{color:var(--accent);font-weight:700}
+  .note{color:var(--muted);font-size:0.9rem;margin-top:8px}
+  @media(max-width:520px){.row{flex-direction:column}}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>🚨 زر الطوارئ</h1>
-    <p>أدخل أرقام الأشخاص اللي عايز تبعتلهم رسالة طوارئ</p>
-    <input type="text" id="numbers" placeholder="أدخل الأرقام مفصولة بفاصلة (مثال: 201001234567,201002345678)" />
-    <textarea id="message" rows="4" placeholder="اكتب رسالة الطوارئ هنا"></textarea>
-    <button onclick="sendMessage()">إرسال الرسالة</button>
-    <small>⚠️ سيتم فتح واتساب لكل رقم تلقائيًا بالتتابع</small>
+  <div class="wrap">
+    <header>
+      <h1>🚨 المنقذ الذكي — إرسال سريع</h1>
+      <small>نسخة خفيفة: إرسال رسالة الطوارئ عبر واتساب / SMS</small>
+    </header>
+
+    <div id="auth" class="card">
+      <label>اسم المستخدم</label>
+      <input id="username" placeholder="اكتب اسمك هنا"/>
+      <label style="margin-top:8px">كلمة المرور</label>
+      <input id="password" type="password" placeholder="كلمة مرور"/>
+      <div class="row" style="margin-top:10px">
+        <button id="register" class="btn">سجّل</button>
+        <button id="login" class="btn ghost">دخول</button>
+      </div>
+      <p class="note">يُحفظ التسجيل محليًا على هذا الجهاز فقط.</p>
+    </div>
+
+    <div id="panel" class="card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong id="who"></strong>
+          <div class="note" id="status">جاهز</div>
+        </div>
+        <button id="logout" class="btn ghost">خروج</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>نص رسالة الطوارئ</label>
+        <textarea id="emergencyText" placeholder="مثلاً: أنا في خطر، أحتاج مساعدة فورًا!"></textarea>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>أضف رقم (بدون +)</label>
+        <div class="row">
+          <input id="c_name" placeholder="الاسم"/>
+          <input id="c_phone" placeholder="رقم دولي (مثلاً 2010...)"/>
+          <button id="addContact" class="btn">أضف</button>
+        </div>
+
+        <table id="contactsTable">
+          <thead><tr><th>اختيار</th><th>الاسم</th><th>الرقم</th><th>حذف</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button id="btnSOS" class="btn">🆘 زر SOS — واتساب</button>
+        <button id="btnCopy" class="btn ghost">نسخ الرسالة</button>
+        <button id="btnSMS" class="btn ghost">SMS</button>
+      </div>
+    </div>
   </div>
 
-  <script>
-    function sendMessage() {
-      const numbersInput = document.getElementById("numbers").value;
-      const message = document.getElementById("message").value.trim();
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
 
-      if (numbersInput.trim() === "" || message === "") {
-        alert("من فضلك أدخل الأرقام والرسالة أولاً.");
-        return;
-      }
+const qs = id => document.getElementById(id);
+const norm = s => s ? s.replace(/\D/g,'') : '';
+const USER_KEY = 'rescuer_current_v2';
 
-      const numbers = numbersInput.split(",").map(num => num.trim()).filter(num => num !== "");
-      let index = 0;
+/* ===== التسجيل / الدخول ===== */
+qs('register').onclick = () => {
+  const u = qs('username').value.trim(), p = qs('password').value;
+  if(!u || !p) return alert('اكتب اسم وكلمة مرور');
+  if(localStorage.getItem('rescuer_'+u)) return alert('الاسم مستخدم');
+  localStorage.setItem('rescuer_'+u, JSON.stringify({password:p, contacts:[], emergencyText:''}));
+  localStorage.setItem(USER_KEY, u);
+  startSession(u);
+};
+qs('login').onclick = () => {
+  const u = qs('username').value.trim(), p = qs('password').value;
+  const raw = localStorage.getItem('rescuer_'+u);
+  if(!raw) return alert('المستخدم غير موجود');
+  const data = JSON.parse(raw);
+  if(data.password !== p) return alert('كلمة المرور خطأ');
+  localStorage.setItem(USER_KEY, u);
+  startSession(u);
+};
+qs('logout').onclick = () => {
+  if(confirm('تسجيل خروج؟')) {
+    localStorage.removeItem(USER_KEY);
+    endSession();
+  }
+};
 
-      const openNext = () => {
-        if (index < numbers.length) {
-          const number = numbers[index];
-          alert(`📨 جاري إرسال للرقم ${index + 1} من ${numbers.length}`);
-          const url = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
-          window.location.href = url; // يفتح في نفس الصفحة
-          index++;
-          setTimeout(openNext, 2000); // كل 2 ثانية رقم جديد
-        } else {
-          alert("✅ تم إرسال الرسائل لكل الأرقام!");
-        }
-      };
+function startSession(u){
+  const data = JSON.parse(localStorage.getItem('rescuer_'+u));
+  qs('auth').style.display = 'none';
+  qs('panel').style.display = 'block';
+  qs('who').innerText = 'مرحبًا ' + u;
+  qs('emergencyText').value = data.emergencyText || '';
+  const tbody = qs('contactsTable').querySelector('tbody');
+  tbody.innerHTML = '';
+  (data.contacts||[]).forEach(c => addRow(c));
+}
+function endSession(){
+  qs('auth').style.display = 'block';
+  qs('panel').style.display = 'none';
+}
 
-      openNext();
+window.addEventListener('load', ()=> {
+  const cur = localStorage.getItem(USER_KEY);
+  if(cur) startSession(cur);
+});
+
+/* ===== الأرقام ===== */
+function getUserData(){ 
+  const u = localStorage.getItem(USER_KEY); 
+  if(!u) return null; 
+  return JSON.parse(localStorage.getItem('rescuer_'+u)); 
+}
+function saveUserData(d){ 
+  const u = localStorage.getItem(USER_KEY); 
+  if(u) localStorage.setItem('rescuer_'+u, JSON.stringify(d)); 
+}
+function addRow(c){
+  const tbody = qs('contactsTable').querySelector('tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="checkbox" data-id="${c.id}"></td><td>${c.name}</td><td>${c.phone}</td>
+                  <td><button class="btn ghost" data-del="${c.id}">حذف</button></td>`;
+  tbody.appendChild(tr);
+  tr.querySelector('button[data-del]').onclick = () => {
+    if(!confirm('حذف هذا الرقم؟')) return;
+    tr.remove();
+    const d = getUserData();
+    d.contacts = d.contacts.filter(x => x.id !== c.id);
+    saveUserData(d);
+  };
+}
+qs('addContact').onclick = () => {
+  const name = qs('c_name').value.trim();
+  const phone = norm(qs('c_phone').value.trim());
+  if(!name || !phone) return alert('اكتب اسم ورقم');
+  const c = {id: Date.now().toString(), name, phone};
+  addRow(c);
+  const d = getUserData();
+  d.contacts.push(c);
+  saveUserData(d);
+  qs('c_name').value=''; qs('c_phone').value='';
+};
+qs('emergencyText').onchange = () => {
+  const d = getUserData();
+  d.emergencyText = qs('emergencyText').value;
+  saveUserData(d);
+};
+
+/* ===== الإرسال ===== */
+function getSelectedPhones(){
+  const tbody = qs('contactsTable').querySelector('tbody');
+  const checks = Array.from(tbody.querySelectorAll('input[type=checkbox]:checked'));
+  const phones = checks.map(ch => ch.closest('tr').cells[2].innerText.trim());
+  if(phones.length === 0){
+    const d = getUserData();
+    return d.contacts.map(c=>c.phone);
+  }
+  return phones;
+}
+
+qs('btnSOS').onclick = async () => {
+  const phones = getSelectedPhones();
+  if(phones.length === 0) return alert('أضف رقم أولاً');
+  const msg = qs('emergencyText').value.trim() || 'أنا في خطر! أحتاج مساعدة فورًا!';
+  qs('status').innerText = 'جاري الإرسال...';
+  let i = 0;
+  const sendNext = () => {
+    if(i < phones.length){
+      const url = `https://wa.me/${phones[i]}?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+      i++;
+      setTimeout(sendNext, 2000); // 2 ثانية
+    } else {
+      qs('status').innerText = '✅ تم فتح كل المحادثات';
     }
-  </script>
+  };
+  sendNext();
+};
+</script>
 </body>
 </html>
